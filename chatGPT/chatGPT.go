@@ -95,7 +95,6 @@ func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 		info = &userInfo{
 			parentID:       uuid.New().String(),
 			conversationId: nil,
-			ttl:            time.Now().Add(5 * time.Minute),
 		}
 		userInfoMap.Store(OpenID, info)
 	} else {
