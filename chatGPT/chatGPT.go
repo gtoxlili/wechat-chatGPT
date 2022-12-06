@@ -95,13 +95,13 @@ func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 		info = &userInfo{
 			parentID:       uuid.New().String(),
 			conversationId: nil,
-			ttl:            time.Now(),
+			ttl:            time.Now().Add(5 * time.Minute),
 		}
 		userInfoMap.Store(OpenID, info)
 	} else {
 		log.Infof("用户 %s 继续对话", OpenID)
 	}
-	info.ttl = info.ttl.Add(time.Minute * 5)
+	info.ttl = time.Now().Add(5 * time.Minute)
 	// 发送请求
 	req, err := http.NewRequest("POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, info.parentID, info.conversationId))
 	if err != nil {
