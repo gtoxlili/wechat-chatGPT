@@ -90,13 +90,16 @@ func (c *ChatGPT) DeleteUser(OpenID string) {
 func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 	// 获取用户信息
 	info, ok := userInfoMap.Load(OpenID)
-	if !ok || info.ttl.After(time.Now()) {
+	if !ok || info.ttl.Before(time.Now()) {
+		log.Infof("用户 %s 启动新的对话", OpenID)
 		info = &userInfo{
 			parentID:       uuid.New().String(),
 			conversationId: nil,
-			ttl:            time.Now().Add(time.Minute * 5),
+			ttl:            time.Now(),
 		}
 		userInfoMap.Store(OpenID, info)
+	} else {
+		log.Infof("用户 %s 继续对话", OpenID)
 	}
 	info.ttl = info.ttl.Add(time.Minute * 5)
 	// 发送请求

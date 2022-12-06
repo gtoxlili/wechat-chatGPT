@@ -81,7 +81,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	xmlMsg := convert.ToTextMsg(body)
 
-	log.Infof("[消息接收] Type: %s, From: %s, MsgId: %s, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.MsgId, xmlMsg.Content)
+	log.Infof("[消息接收] Type: %s, From: %s, MsgId: %d, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.MsgId, xmlMsg.Content)
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
