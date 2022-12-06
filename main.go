@@ -25,11 +25,7 @@ var reqGroup singleflight.Group
 func init() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
-	log.SetFormatter(&log.TextFormatter{
-		DisableColors:   runtime.GOOS == "windows",
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02 15:04:05",
-	})
+	log.SetFormatter(util.DefaultLogFormatter())
 }
 
 func main() {
@@ -49,11 +45,11 @@ func main() {
 
 	l, err := net.Listen("tcp", ":7458")
 	if err != nil {
-		log.Errorln(err)
+		log.Fatalln(err)
 	}
 	log.Infof("Server listening at %s", l.Addr())
 	if err = http.Serve(l, r); err != nil {
-		log.Errorln(err)
+		log.Fatalln(err)
 	}
 }
 
