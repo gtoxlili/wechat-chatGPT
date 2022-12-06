@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 	"wx-ChatGPT/chatGPT"
 	"wx-ChatGPT/convert"
@@ -80,7 +81,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	xmlMsg := convert.ToTextMsg(body)
 
-	log.Infof("[消息接收] Type: %s, From: %s, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.Content)
+	log.Infof("[消息接收] Type: %s, From: %s, MsgId: %s, Content: %s", xmlMsg.MsgType, xmlMsg.FromUserName, xmlMsg.MsgId, xmlMsg.Content)
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
@@ -88,13 +89,24 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	// 回复消息
 	replyMsg := ""
 
-	if xmlMsg.MsgType != "text" {
-		replyMsg = "不支持的消息类型"
-	} else {
-		msg, _, _ := reqGroup.Do(xmlMsg.FromUserName, func() (interface{}, error) {
+	// 关注公众号事件
+	if xmlMsg.MsgType == "event" {
+		if xmlMsg.Event == "unsubscribe" {
+			chatGPT.DefaultGPT.DeleteUser(xmlMsg.FromUserName)
+		}
+		if xmlMsg.Event != "subscribe" {
+			util.TodoEvent(w)
+			return
+		}
+		replyMsg = ":) 感谢你发现了这里"
+	} else if xmlMsg.MsgType == "text" {
+		msg, _, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
 			return chatGPT.DefaultGPT.SendMsg(xmlMsg.Content, xmlMsg.FromUserName), nil
 		})
 		replyMsg = msg.(string)
+	} else {
+		util.TodoEvent(w)
+		return
 	}
 
 	textRes := &convert.TextRes{

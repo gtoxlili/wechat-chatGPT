@@ -29,6 +29,7 @@ type ChatGPT struct {
 type userInfo struct {
 	parentID       string
 	conversationId interface{}
+	ttl            time.Time
 }
 
 func newChatGPT() *ChatGPT {
@@ -82,16 +83,22 @@ func (c *ChatGPT) updateSessionToken() {
 	c.authorization = accessToken["accessToken"].(string)
 }
 
+func (c *ChatGPT) DeleteUser(OpenID string) {
+	userInfoMap.Delete(OpenID)
+}
+
 func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 	// 获取用户信息
 	info, ok := userInfoMap.Load(OpenID)
-	if !ok {
+	if !ok || info.ttl.After(time.Now()) {
 		info = &userInfo{
 			parentID:       uuid.New().String(),
 			conversationId: nil,
+			ttl:            time.Now().Add(time.Minute * 5),
 		}
 		userInfoMap.Store(OpenID, info)
 	}
+	info.ttl = info.ttl.Add(time.Minute * 5)
 	// 发送请求
 	req, err := http.NewRequest("POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, info.parentID, info.conversationId))
 	if err != nil {

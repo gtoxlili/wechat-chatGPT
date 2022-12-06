@@ -11,6 +11,7 @@ type TextMsg struct {
 	MsgId        int64  `xml:"MsgId"`
 	MsgDataId    int64  `xml:"MsgDataId"`
 	Idx          int64  `xml:"Idx"`
+	Event        string `xml:"Event"`
 }
 
 func ToTextMsg(body []byte) *TextMsg {
