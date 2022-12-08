@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -105,8 +106,10 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		// 最多等待 15 s， 超时返回空值
 		msg, err, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
+			ctx, canel := context.WithCancel(context.Background())
+			defer canel()
 			select {
-			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName):
+			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
 				return msg, nil
 			case <-time.After(14 * time.Second):
 				// 超时返回错误

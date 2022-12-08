@@ -2,6 +2,7 @@ package chatGPT
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -92,15 +93,15 @@ func (c *ChatGPT) DeleteUser(OpenID string) {
 	userInfoMap.Delete(OpenID)
 }
 
-func (c *ChatGPT) SendMsgChan(msg, OpenID string) <-chan string {
+func (c *ChatGPT) SendMsgChan(msg, OpenID string, ctx context.Context) <-chan string {
 	ch := make(chan string, 1)
 	go func() {
-		ch <- c.SendMsg(msg, OpenID)
+		ch <- c.SendMsg(msg, OpenID, ctx)
 	}()
 	return ch
 }
 
-func (c *ChatGPT) SendMsg(msg, OpenID string) string {
+func (c *ChatGPT) SendMsg(msg, OpenID string, ctx context.Context) string {
 	// 获取用户信息
 	info, ok := userInfoMap.Load(OpenID)
 	if !ok || info.ttl.Before(time.Now()) {
@@ -115,7 +116,7 @@ func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 	}
 	info.ttl = time.Now().Add(5 * time.Minute)
 	// 发送请求
-	req, err := http.NewRequest("POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, info.parentID, info.conversationId))
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, info.parentID, info.conversationId))
 	if err != nil {
 		log.Errorln(err)
 		return "服务器异常, 请稍后再试"
