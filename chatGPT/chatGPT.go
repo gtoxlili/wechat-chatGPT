@@ -95,7 +95,7 @@ func (c *ChatGPT) DeleteUser(OpenID string) {
 func (c *ChatGPT) SendMsgChan(msg, OpenID string) <-chan string {
 	ch := make(chan string, 1)
 	go func() {
-		ch <- c.SendMsg(OpenID, msg)
+		ch <- c.SendMsg(msg, OpenID)
 	}()
 	return ch
 }
