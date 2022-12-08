@@ -111,7 +111,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			select {
 			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
 				return msg, nil
-			case <-time.After(15 * time.Second):
+			case <-time.After(14*time.Second + 500*time.Millisecond):
 				// 超时返回错误
 				return "", fmt.Errorf("请求超时, MsgId: %d", xmlMsg.MsgId)
 			}
