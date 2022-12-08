@@ -98,7 +98,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		replyMsg = ":) 感谢你发现了这里"
 	} else if xmlMsg.MsgType == "text" {
 		// 【收到不支持的消息类型，暂无法显示】
-		if strings.Contains(xmlMsg.Content, "收到不支持的消息类型") {
+		if strings.Contains(xmlMsg.Content, "【收到不支持的消息类型，暂无法显示】") {
 			util.TodoEvent(w)
 			return
 		}
