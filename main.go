@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -102,17 +103,22 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			util.TodoEvent(w)
 			return
 		}
-		// 最多等待 13 s， 超时返回空值
-		select {
-		case <-time.After(14 * time.Second):
-			log.Warnf("请求超时，From: %s, Content: %s", xmlMsg.FromUserName, xmlMsg.Content)
+		// 最多等待 15 s， 超时返回空值
+		msg, err, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
+			select {
+			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName):
+				return msg, nil
+			case <-time.After(14 * time.Second):
+				// 超时返回错误
+				return "", fmt.Errorf("请求超时, MsgId: %d", xmlMsg.MsgId)
+			}
+		})
+		if err != nil {
+			log.Errorln(err)
 			util.TodoEvent(w)
 			return
-		case msg := <-reqGroup.DoChan(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
-			return chatGPT.DefaultGPT.SendMsg(xmlMsg.Content, xmlMsg.FromUserName), nil
-		}):
-			replyMsg = msg.Val.(string)
 		}
+		replyMsg = msg.(string)
 	} else {
 		util.TodoEvent(w)
 		return

@@ -92,6 +92,14 @@ func (c *ChatGPT) DeleteUser(OpenID string) {
 	userInfoMap.Delete(OpenID)
 }
 
+func (c *ChatGPT) SendMsgChan(msg, OpenID string) <-chan string {
+	ch := make(chan string, 1)
+	go func() {
+		ch <- c.SendMsg(OpenID, msg)
+	}()
+	return ch
+}
+
 func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 	// 获取用户信息
 	info, ok := userInfoMap.Load(OpenID)
