@@ -102,9 +102,9 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			util.TodoEvent(w)
 			return
 		}
-		// 最多等待 15 s， 超时返回空值
+		// 最多等待 13 s， 超时返回空值
 		select {
-		case <-time.After(15 * time.Second):
+		case <-time.After(14 * time.Second):
 			log.Warnf("请求超时，From: %s, Content: %s", xmlMsg.FromUserName, xmlMsg.Content)
 			util.TodoEvent(w)
 			return
