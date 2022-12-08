@@ -40,10 +40,10 @@ func newChatGPT() *ChatGPT {
 	gpt := &ChatGPT{
 		sessionToken: *(*string)(unsafe.Pointer(&sessionToken)),
 	}
-	// // 每 5 分钟更新一次 sessionToken
+	// // 每 10 分钟更新一次 sessionToken
 	go func() {
 		gpt.updateSessionToken()
-		for range time.Tick(5 * time.Minute) {
+		for range time.Tick(10 * time.Minute) {
 			gpt.updateSessionToken()
 		}
 	}()
