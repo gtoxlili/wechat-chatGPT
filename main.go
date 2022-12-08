@@ -106,8 +106,8 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		// 最多等待 15 s， 超时返回空值
 		msg, err, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
-			ctx, canel := context.WithCancel(context.Background())
-			defer canel()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			select {
 			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
 				return msg, nil

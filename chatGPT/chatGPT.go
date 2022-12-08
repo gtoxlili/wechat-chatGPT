@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -137,7 +136,12 @@ func (c *ChatGPT) SendMsg(msg, OpenID string, ctx context.Context) string {
 		return "服务器异常, 请稍后再试"
 	}
 	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := util.ReadWithCtx(ctx, resp.Body)
+	defer util.PutBytes(bodyBytes)
+	if err != nil {
+		log.Errorln(err)
+		return "服务器异常, 请稍后再试"
+	}
 	line := bytes.Split(bodyBytes, []byte("\n\n"))
 	if len(line) < 2 {
 		log.Errorln(*(*string)(unsafe.Pointer(&bodyBytes)))
