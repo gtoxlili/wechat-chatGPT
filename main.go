@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 	"wx-ChatGPT/chatGPT"
 	"wx-ChatGPT/convert"
@@ -96,6 +97,11 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		}
 		replyMsg = ":) 感谢你发现了这里"
 	} else if xmlMsg.MsgType == "text" {
+		// 【收到不支持的消息类型，暂无法显示】
+		if strings.Contains(xmlMsg.Content, "收到不支持的消息类型") {
+			util.TodoEvent(w)
+			return
+		}
 		msg, _, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
 			return chatGPT.DefaultGPT.SendMsg(xmlMsg.Content, xmlMsg.FromUserName), nil
 		})

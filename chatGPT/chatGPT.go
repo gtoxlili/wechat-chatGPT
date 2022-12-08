@@ -60,6 +60,10 @@ func (c *ChatGPT) updateSessionToken() {
 		Name:  "__Secure-next-auth.session-token",
 		Value: c.sessionToken,
 	})
+	session.AddCookie(&http.Cookie{
+		Name:  "__Secure-next-auth.callback-url",
+		Value: "https://chat.openai.com/",
+	})
 	session.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15")
 	resp, err := http.DefaultClient.Do(session)
 	if err != nil {
@@ -71,6 +75,7 @@ func (c *ChatGPT) updateSessionToken() {
 		if cookie.Name == "__Secure-next-auth.session-token" {
 			c.sessionToken = cookie.Value
 			_ = os.WriteFile("sessionToken", []byte(cookie.Value), 0644)
+			log.Infoln("sessionToken 更新成功 , sessionToken =", cookie.Value)
 			break
 		}
 	}
@@ -107,10 +112,15 @@ func (c *ChatGPT) SendMsg(msg, OpenID string) string {
 		log.Errorln(err)
 		return "服务器异常, 请稍后再试"
 	}
+	req.Header.Set("Host", "chat.openai.com")
 	req.Header.Set("Authorization", "Bearer "+c.authorization)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15")
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Openai-Assistant-App-Id", "")
+	req.Header.Set("Connection", "close")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Referer", "https://chat.openai.com/chat")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
