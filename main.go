@@ -102,10 +102,17 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			util.TodoEvent(w)
 			return
 		}
-		msg, _, _ := reqGroup.Do(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
+		// 最多等待 15 s， 超时返回空值
+		select {
+		case <-time.After(15 * time.Second):
+			log.Warnf("请求超时，From: %s, Content: %s", xmlMsg.FromUserName, xmlMsg.Content)
+			util.TodoEvent(w)
+			return
+		case msg := <-reqGroup.DoChan(strconv.FormatInt(xmlMsg.MsgId, 10), func() (interface{}, error) {
 			return chatGPT.DefaultGPT.SendMsg(xmlMsg.Content, xmlMsg.FromUserName), nil
-		})
-		replyMsg = msg.(string)
+		}):
+			replyMsg = msg.Val.(string)
+		}
 	} else {
 		util.TodoEvent(w)
 		return
