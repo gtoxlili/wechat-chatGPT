@@ -18,7 +18,7 @@ go build -trimpath -o ./dist/weChatGPT \
 ### 注意事项
 sessionToken 文件请放置与可执行文件同一目录下，并且只保留__Secure-next-auth.session-token的内容
 ### 效果图
-![效果图](\img\photo.jpg)
+![](https://raw.githubusercontent.com/gtoxlili/wechat-chatGPT/master/img/photo.jpg)
 
 ### 其他
 > ~~这其实是一篇没什么用的README~~  
