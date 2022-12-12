@@ -20,7 +20,10 @@ go build -trimpath -o ./dist/weChatGPT \
 
 ### 注意事项
 
-config.json 文件请放置与可执行文件同一目录下
+1. `config.json` 文件请放置与可执行文件同一目录下
+2. `cf_clearance` 可用于绕过 `Cloudflare` 的防火墙，但请保证获取 `cf_clearance` 时的 UA 与 IP 与项目实际运行时一致 (本项目默认
+   UA 为 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36`
+   如需修改请自行修改源码)
 
 ### 效果图
 
