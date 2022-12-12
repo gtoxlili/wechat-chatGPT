@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"os"
 	"time"
-	"unsafe"
 	"wx-ChatGPT/chatGPT/handler"
+	"wx-ChatGPT/convert"
 	"wx-ChatGPT/util"
 )
 
@@ -22,19 +21,18 @@ var (
 type ChatGPT struct {
 	authorization string
 	sessionToken  string
+	cfClearance   string
 }
 
 func newChatGPT() *ChatGPT {
-	sessionToken, err := os.ReadFile("sessionToken")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	config := convert.ReadConfig()
 	gpt := &ChatGPT{
-		sessionToken: *(*string)(unsafe.Pointer(&sessionToken)),
+		sessionToken: config.SessionToken,
+		cfClearance:  config.CfClearance,
 	}
-	// // 每 10 分钟更新一次 sessionToken
+	// 每 10 分钟更新一次 config.json
+	gpt.updateSessionToken()
 	go func() {
-		gpt.updateSessionToken()
 		for range time.Tick(10 * time.Minute) {
 			gpt.updateSessionToken()
 		}
@@ -53,10 +51,11 @@ func (c *ChatGPT) updateSessionToken() {
 		Value: c.sessionToken,
 	})
 	session.AddCookie(&http.Cookie{
-		Name:  "__Secure-next-auth.callback-url",
-		Value: "https://chat.openai.com/",
+		Name:  "cf_clearance",
+		Value: c.cfClearance,
 	})
-	session.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15")
+	session.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
+
 	resp, err := http.DefaultClient.Do(session)
 	if err != nil {
 		log.Errorln(err)
@@ -66,8 +65,11 @@ func (c *ChatGPT) updateSessionToken() {
 	for _, cookie := range resp.Cookies() {
 		if cookie.Name == "__Secure-next-auth.session-token" {
 			c.sessionToken = cookie.Value
-			_ = os.WriteFile("sessionToken", []byte(cookie.Value), 0644)
-			log.Infoln("sessionToken 更新成功 , sessionToken =", cookie.Value)
+			convert.SaveConfig(&convert.Config{
+				SessionToken: c.sessionToken,
+				CfClearance:  c.cfClearance,
+			})
+			log.Infoln("配置更新成功, sessionToken = ", cookie.Value)
 			break
 		}
 	}
@@ -104,5 +106,5 @@ func (c *ChatGPT) SendMsg(msg, OpenID string, ctx context.Context) string {
 	}
 	info.TTL = time.Now().Add(5 * time.Minute)
 	// 发送请求
-	return info.SendMsg(ctx, c.authorization, msg)
+	return info.SendMsg(ctx, c.authorization, msg, c.cfClearance)
 }

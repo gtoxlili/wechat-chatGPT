@@ -13,14 +13,10 @@ import (
 )
 
 var baseHeader = map[string]string{
-	"Host":                      "chat.openai.com",
-	"User-Agent":                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",
-	"Accept":                    "text/event-stream",
-	"Content-Type":              "application/json",
-	"X-Openai-Assistant-App-Id": "",
-	"Connection":                "close",
-	"Accept-Language":           "en-US,en;q=0.9",
-	"Referer":                   "https://chat.openai.com/chat",
+	"User-Agent":   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+	"Accept":       "text/event-stream",
+	"Content-Type": "application/json",
+	"Connection":   "close",
 }
 
 type UserInfo struct {
@@ -36,7 +32,7 @@ func NewUserInfo() *UserInfo {
 	}
 }
 
-func (user *UserInfo) SendMsg(ctx context.Context, authorization, msg string) string {
+func (user *UserInfo) SendMsg(ctx context.Context, authorization, msg, cfClearance string) string {
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, user.parentID, user.conversationId))
 	if err != nil {
 		log.Errorln(err)
@@ -46,6 +42,10 @@ func (user *UserInfo) SendMsg(ctx context.Context, authorization, msg string) st
 		req.Header.Set(k, v)
 	}
 	req.Header.Set("Authorization", "Bearer "+authorization)
+	req.AddCookie(&http.Cookie{
+		Name:  "cf_clearance",
+		Value: cfClearance,
+	})
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
