@@ -31,8 +31,8 @@ func newChatGPT() *ChatGPT {
 		cfClearance:  config.CfClearance,
 	}
 	// 每 10 分钟更新一次 config.json
-	gpt.updateSessionToken()
 	go func() {
+		gpt.updateSessionToken()
 		for range time.Tick(10 * time.Minute) {
 			gpt.updateSessionToken()
 		}
