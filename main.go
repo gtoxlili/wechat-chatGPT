@@ -91,7 +91,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	// 关注公众号事件
 	if xmlMsg.MsgType == "event" {
 		if xmlMsg.Event == "unsubscribe" {
-			chatGPT.DefaultGPT.DeleteUser(xmlMsg.FromUserName)
+			chatGPT.DefaultGPT().DeleteUser(xmlMsg.FromUserName)
 		}
 		if xmlMsg.Event != "subscribe" {
 			util.TodoEvent(w)
@@ -109,7 +109,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			select {
-			case msg := <-chatGPT.DefaultGPT.SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
+			case msg := <-chatGPT.DefaultGPT().SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
 				return msg, nil
 			case <-time.After(14*time.Second + 500*time.Millisecond):
 				// 超时返回错误

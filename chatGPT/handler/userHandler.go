@@ -13,10 +13,11 @@ import (
 )
 
 var baseHeader = map[string]string{
-	"User-Agent":   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-	"Accept":       "text/event-stream",
-	"Content-Type": "application/json",
-	"Connection":   "close",
+	"User-Agent":    "",
+	"Accept":        "text/event-stream",
+	"Content-Type":  "application/json",
+	"Connection":    "close",
+	"Authorization": "",
 }
 
 type UserInfo struct {
@@ -32,19 +33,20 @@ func NewUserInfo() *UserInfo {
 	}
 }
 
-func (user *UserInfo) SendMsg(ctx context.Context, authorization, msg, cfClearance string) string {
+func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config *convert.Config, msg string) string {
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, user.parentID, user.conversationId))
 	if err != nil {
 		log.Errorln(err)
 		return "服务器异常, 请稍后再试"
 	}
+	baseHeader["Authorization"] = "Bearer " + authorization
+	baseHeader["User-Agent"] = config.UserAgent
 	for k, v := range baseHeader {
 		req.Header.Set(k, v)
 	}
-	req.Header.Set("Authorization", "Bearer "+authorization)
 	req.AddCookie(&http.Cookie{
 		Name:  "cf_clearance",
-		Value: cfClearance,
+		Value: config.CfClearance,
 	})
 
 	resp, err := http.DefaultClient.Do(req)
