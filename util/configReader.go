@@ -1,4 +1,4 @@
-package convert
+package util
 
 import (
 	"encoding/json"

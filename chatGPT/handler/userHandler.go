@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 	"unsafe"
@@ -33,11 +32,10 @@ func NewUserInfo() *UserInfo {
 	}
 }
 
-func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config *convert.Config, msg string) string {
+func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config *util.Config, msg string) string {
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, user.parentID, user.conversationId))
 	if err != nil {
-		log.Errorln(err)
-		return "服务器异常, 请稍后再试"
+		panic(err)
 	}
 	baseHeader["Authorization"] = "Bearer " + authorization
 	baseHeader["User-Agent"] = config.UserAgent
@@ -51,28 +49,21 @@ func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config 
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Errorln(err)
-		return "服务器异常, 请稍后再试"
+		panic(err)
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := util.ReadWithCtx(ctx, resp.Body)
 	defer util.PutBytes(bodyBytes)
 	if err != nil {
-		log.Errorln(err)
-		return "服务器异常, 请稍后再试"
+		panic(err)
 	}
 	line := bytes.Split(bodyBytes, []byte("\n\n"))
 	if len(line) < 2 {
-		log.Errorln(*(*string)(unsafe.Pointer(&bodyBytes)))
-		return "服务器异常, 请稍后再试"
+		panic(*(*string)(unsafe.Pointer(&bodyBytes)))
 	}
 	endBlock := line[len(line)-3][6:]
 	res := convert.ToChatRes(endBlock)
 	user.conversationId = res.ConversationId
 	user.parentID = res.Message.Id
-	if len(res.Message.Content.Parts) > 0 {
-		return res.Message.Content.Parts[0]
-	} else {
-		return ""
-	}
+	return res.Message.Content.Parts[0]
 }

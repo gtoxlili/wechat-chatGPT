@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 	"wx-ChatGPT/chatGPT/handler"
-	"wx-ChatGPT/convert"
 	"wx-ChatGPT/util"
 )
 
@@ -29,16 +28,16 @@ func DefaultGPT() *ChatGPT {
 
 type ChatGPT struct {
 	authorization string
-	config        *convert.Config
+	config        *util.Config
 }
 
 func newChatGPT() *ChatGPT {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Fatalln(err)
+			log.Fatalln("初始化失败: ", err)
 		}
 	}()
-	config := convert.ReadConfig()
+	config := util.ReadConfig()
 	gpt := &ChatGPT{
 		config: config,
 	}
@@ -55,7 +54,7 @@ func newChatGPT() *ChatGPT {
 func (c *ChatGPT) updateSessionToken() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Errorln(err)
+			log.Errorln("更新 sessionToken 失败 :", err)
 		}
 	}()
 	session, err := http.NewRequest("GET", "https://chat.openai.com/api/auth/session", nil)
@@ -80,7 +79,7 @@ func (c *ChatGPT) updateSessionToken() {
 	for _, cookie := range resp.Cookies() {
 		if cookie.Name == "__Secure-next-auth.session-token" {
 			c.config.SessionToken = cookie.Value
-			convert.SaveConfig(c.config)
+			util.SaveConfig(c.config)
 			log.Infoln("配置更新成功, sessionToken = ", cookie.Value)
 			break
 		}
