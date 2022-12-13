@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,22 @@ func main() {
 			NoColor: runtime.GOOS == "windows",
 		}))
 	r.Use(middleware.Recoverer)
+
+	// ChatGPT 可用性检查
+	r.Get("/healthCheck", func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			chatGPT.DefaultGPT().DeleteUser("healthCheck")
+			if err := recover(); err != nil {
+				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+				w.WriteHeader(http.StatusOK)
+				w.Write(debug.Stack())
+				// 打印堆栈信息以便于排查问题
+				middleware.PrintPrettyStack(err)
+			}
+		}()
+		chatGPT.DefaultGPT().SendMsg("健康检查", "healthCheck", context.Background())
+		render.PlainText(w, r, "ok")
+	})
 
 	// 微信接入校验
 	r.Get("/weChatGPT", wechatCheck)
@@ -76,6 +93,13 @@ func wechatCheck(w http.ResponseWriter, r *http.Request) {
 
 // 微信消息处理
 func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorln(err)
+			util.TodoEvent(w)
+		}
+	}()
+
 	// 解析消息
 	body, _ := io.ReadAll(r.Body)
 	xmlMsg := convert.ToTextMsg(body)
@@ -117,9 +141,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			}
 		})
 		if err != nil {
-			log.Errorln(err)
-			util.TodoEvent(w)
-			return
+			panic(err)
 		}
 		replyMsg = msg.(string)
 	} else {
