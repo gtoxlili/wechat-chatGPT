@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
@@ -12,14 +11,13 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
-	"wx-ChatGPT/chatGPT"
-	"wx-ChatGPT/convert"
-	"wx-ChatGPT/util"
+	"wxChatGPT/chatGPT"
+	"wxChatGPT/convert"
+	"wxChatGPT/util"
+	"wxChatGPT/util/middleware"
 )
 
 const wxToken = "" // 这里填微信开发平台里设置的 Token
@@ -35,29 +33,11 @@ func init() {
 func main() {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequestLogger(
-		&middleware.DefaultLogFormatter{
-			Logger:  log.StandardLogger(),
-			NoColor: runtime.GOOS == "windows",
-		}))
-	r.Use(middleware.Recoverer)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recover)
 
 	// ChatGPT 可用性检查
-	r.Get("/healthCheck", func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			chatGPT.DefaultGPT().DeleteUser("healthCheck")
-			if err := recover(); err != nil {
-				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-				w.WriteHeader(http.StatusOK)
-				w.Write(debug.Stack())
-				// 打印堆栈信息以便于排查问题
-				middleware.PrintPrettyStack(err)
-			}
-		}()
-		chatGPT.DefaultGPT().SendMsg("健康检查", "healthCheck", context.Background())
-		render.PlainText(w, r, "ok")
-	})
-
+	r.Get("/healthCheck", healthCheck)
 	// 微信接入校验
 	r.Get("/weChatGPT", wechatCheck)
 	// 微信消息处理
@@ -71,6 +51,13 @@ func main() {
 	if err = http.Serve(l, r); err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// ChatGPT 可用性检查
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	defer chatGPT.DefaultGPT().DeleteUser("healthCheck")
+	chatGPT.DefaultGPT().SendMsg("健康检查", "healthCheck", context.Background())
+	render.PlainText(w, r, "ok")
 }
 
 // 微信接入校验
@@ -93,13 +80,6 @@ func wechatCheck(w http.ResponseWriter, r *http.Request) {
 
 // 微信消息处理
 func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Errorln(err)
-			util.TodoEvent(w)
-		}
-	}()
-
 	// 解析消息
 	body, _ := io.ReadAll(r.Body)
 	xmlMsg := convert.ToTextMsg(body)

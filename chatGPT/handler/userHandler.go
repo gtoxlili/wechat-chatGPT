@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 	"unsafe"
-	"wx-ChatGPT/convert"
-	"wx-ChatGPT/util"
+	"wxChatGPT/convert"
+	"wxChatGPT/util"
 )
 
 var baseHeader = map[string]string{

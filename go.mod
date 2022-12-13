@@ -1,4 +1,4 @@
-module wx-ChatGPT
+module wxChatGPT
 
 go 1.19
 

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
-	"wx-ChatGPT/chatGPT/handler"
-	"wx-ChatGPT/util"
+	"wxChatGPT/chatGPT/handler"
+	"wxChatGPT/util"
 )
 
 var (
