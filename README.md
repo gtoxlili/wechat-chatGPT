@@ -26,7 +26,7 @@ go build -trimpath -o ./dist/weChatGPT \
 
 ### 效果图
 
-![](https://raw.githubusercontent.com/gtoxlili/wechat-chatGPT/master/img/photo.jpg)
+![](https://github.com/shenjia/wechat-chatGPT/blob/master/img/screenshot.jpg?raw=true)
 
 ### 关于如何在服务器上获取 `cf_clearance`
 
