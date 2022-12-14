@@ -132,7 +132,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		replyMsg = msg.(chatGPT.Result).Val
+		replyMsg = msg.(string)
 	} else {
 		util.TodoEvent(w)
 		return
