@@ -24,6 +24,10 @@ go build -trimpath -o ./dist/weChatGPT \
 2. `cf_clearance` 可用于绕过 `Cloudflare` 的防火墙，但请保证获取 `cf_clearance` 时的 UA 与 IP 与项目实际运行时一致 (本项目默认
    UA 为 `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36`)
 
+### 可用性测试
+
+可在填好 `config.json` 的情况下，运行并通过 `127.0.0.1:7458/healthCheck` 进行可用性测试
+
 ### 效果图
 
 ![](https://github.com/gtoxlili/wechat-chatGPT/blob/master/img/screenshot.jpg?raw=true)

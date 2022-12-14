@@ -56,7 +56,16 @@ func main() {
 // ChatGPT 可用性检查
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	defer chatGPT.DefaultGPT().DeleteUser("healthCheck")
-	chatGPT.DefaultGPT().SendMsg("健康检查", "healthCheck", context.Background())
+	msg, err, _ := reqGroup.Do("healthCheck", func() (interface{}, error) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		result := <-chatGPT.DefaultGPT().SendMsgChan("宇宙的终极答案是什么?", "healthCheck", ctx)
+		return result.Val, result.Err
+	})
+	if err != nil {
+		panic(err)
+	}
+	log.Infof("测试返回：%s", msg)
 	render.PlainText(w, r, "ok")
 }
 
