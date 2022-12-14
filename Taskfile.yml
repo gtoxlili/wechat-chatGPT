@@ -2,6 +2,8 @@ version: '3'
 
 vars:
   BINARY_NAME: weChatGPT
+  WECHAT_TOKEN:
+  REMOTE_ADDRESS:
 
 tasks:
   clean:
@@ -15,7 +17,8 @@ tasks:
         GOOS={{.GOOS}} GOARCH={{.GOARCH}} GOARM={{.GOARM}} GOMIPS={{.GOMIPS}} \
         CGO_ENABLED=0 \
         go build -trimpath -o ./dist/{{.BINARY_NAME}} \
-        -ldflags "-w -s -buildid="
+        -ldflags "-X 'main.wxToken={{.WECHAT_TOKEN}}' -w -s -buildid="
+      - scp -r ./dist/weChatGPT {{.REMOTE_ADDRESS}}
   linux-amd64:
     cmds:
       - task: build
