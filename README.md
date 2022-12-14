@@ -53,11 +53,13 @@ go build -trimpath -o ./dist/weChatGPT \
    import json
    
    config = {
-     "session-token": "",
-     "cf_clearance": "",
-     "user-agent": ""
+    "session-token": "",
+    "cf_clearance": "",
+    "user-agent": "",
+    "debug": False,
+    "log-level": "info"
    }
-   
+
    if __name__ == '__main__':
        with sync_playwright() as p:
            browser = p.chromium.launch(headless=False)
@@ -75,7 +77,7 @@ go build -trimpath -o ./dist/weChatGPT \
                config["user-agent"]=ua
            else:
                print("fail")
-           print(config)
+           print(json.dumps(config))
            browser.close()
    ```
 

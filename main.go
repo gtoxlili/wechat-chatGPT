@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	m "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
@@ -11,13 +12,16 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 	"wxChatGPT/chatGPT"
+	"wxChatGPT/config"
 	"wxChatGPT/convert"
 	"wxChatGPT/util"
 	"wxChatGPT/util/middleware"
+	"wxChatGPT/util/signature"
 )
 
 const wxToken = "" // 这里填微信开发平台里设置的 Token
@@ -25,9 +29,16 @@ const wxToken = "" // 这里填微信开发平台里设置的 Token
 var reqGroup singleflight.Group
 
 func init() {
+	log.SetLevel(config.GetLogLevel())
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
-	log.SetFormatter(util.DefaultLogFormatter())
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:   runtime.GOOS == "windows",
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+	config.AddConfigChangeCallback(func() {
+		log.SetLevel(config.GetLogLevel())
+	})
 }
 
 func main() {
@@ -73,18 +84,18 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 func wechatCheck(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
-	signature := query.Get("signature")
+	sign := query.Get("signature")
 	timestamp := query.Get("timestamp")
 	nonce := query.Get("nonce")
 	echostr := query.Get("echostr")
 
 	// 校验
-	if util.CheckSignature(signature, timestamp, nonce, wxToken) {
+	if signature.CheckSignature(sign, timestamp, nonce, wxToken) {
 		render.PlainText(w, r, echostr)
 		return
 	}
 
-	log.Errorln("微信接入校验失败")
+	log.Warnln("微信接入校验失败")
 }
 
 // 微信消息处理
@@ -148,5 +159,8 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 	_, err := w.Write(textRes.ToXml())
 	if err != nil {
 		log.Errorln(err)
+		if config.GetIsDebug() {
+			m.PrintPrettyStack(err)
+		}
 	}
 }

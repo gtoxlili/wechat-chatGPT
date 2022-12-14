@@ -3,7 +3,7 @@ module wxChatGPT
 go 1.19
 
 require (
-	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e
+	github.com/cespare/xxhash v1.1.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.2
 	github.com/google/uuid v1.3.0

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 	"unsafe"
+	"wxChatGPT/config"
 	"wxChatGPT/convert"
 	"wxChatGPT/util"
 )
@@ -32,7 +33,7 @@ func NewUserInfo() *UserInfo {
 	}
 }
 
-func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config *util.Config, msg string) string {
+func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config *config.Config, msg string) string {
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://chat.openai.com/backend-api/conversation", convert.CreateChatReqBody(msg, user.parentID, user.conversationId))
 	if err != nil {
 		panic(err)
@@ -46,7 +47,6 @@ func (user *UserInfo) SendMsg(ctx context.Context, authorization string, config 
 		Name:  "cf_clearance",
 		Value: config.CfClearance,
 	})
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		panic(err)

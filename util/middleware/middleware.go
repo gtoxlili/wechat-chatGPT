@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"runtime"
+	"wxChatGPT/config"
 	"wxChatGPT/util"
 )
 
@@ -20,14 +21,11 @@ func Recover(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				if r.URL.Path == "/healthCheck" {
-					w.WriteHeader(http.StatusInternalServerError)
-					w.Write([]byte("error"))
+				log.Errorln(err)
+				if config.GetIsDebug() {
 					m.PrintPrettyStack(err)
-				} else {
-					log.Errorln(err)
-					util.TodoEvent(w)
 				}
+				util.TodoEvent(w)
 			}
 		}()
 		next.ServeHTTP(w, r)

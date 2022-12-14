@@ -3,11 +3,13 @@ package chatGPT
 import (
 	"context"
 	"encoding/json"
+	m "github.com/go-chi/chi/v5/middleware"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 	"time"
 	"wxChatGPT/chatGPT/handler"
+	"wxChatGPT/config"
 	"wxChatGPT/util"
 )
 
@@ -28,7 +30,7 @@ func DefaultGPT() *ChatGPT {
 
 type ChatGPT struct {
 	authorization string
-	config        *util.Config
+	config        *config.Config
 }
 
 func newChatGPT() *ChatGPT {
@@ -37,10 +39,7 @@ func newChatGPT() *ChatGPT {
 			log.Fatalln("初始化失败: ", err)
 		}
 	}()
-	config := util.ReadConfig()
-	gpt := &ChatGPT{
-		config: config,
-	}
+	gpt := &ChatGPT{}
 	// 每 10 分钟更新一次 config.json
 	gpt.updateSessionToken()
 	go func() {
@@ -55,8 +54,12 @@ func (c *ChatGPT) updateSessionToken() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Errorln("更新 sessionToken 失败 :", err)
+			if config.GetIsDebug() {
+				m.PrintPrettyStack(err)
+			}
 		}
 	}()
+	c.config = config.ReadConfig()
 	session, err := http.NewRequest("GET", "https://chat.openai.com/api/auth/session", nil)
 	if err != nil {
 		panic(err)
@@ -79,8 +82,8 @@ func (c *ChatGPT) updateSessionToken() {
 	for _, cookie := range resp.Cookies() {
 		if cookie.Name == "__Secure-next-auth.session-token" {
 			c.config.SessionToken = cookie.Value
-			util.SaveConfig(c.config)
-			log.Infoln("配置更新成功, sessionToken = ", cookie.Value)
+			config.SaveConfig(c.config)
+			log.Infoln("配置更新成功, sessionToken=", cookie.Value)
 			break
 		}
 	}
