@@ -113,8 +113,8 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			select {
-			case msg := <-chatGPT.DefaultGPT().SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
-				return msg, nil
+			case result := <-chatGPT.DefaultGPT().SendMsgChan(xmlMsg.Content, xmlMsg.FromUserName, ctx):
+				return result.Val, result.Err
 			case <-time.After(14*time.Second + 500*time.Millisecond):
 				// 超时返回错误
 				return "", fmt.Errorf("请求超时, MsgId: %d", xmlMsg.MsgId)
@@ -123,7 +123,7 @@ func wechatMsgReceive(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		replyMsg = msg.(string)
+		replyMsg = msg.(chatGPT.Result).Val
 	} else {
 		util.TodoEvent(w)
 		return

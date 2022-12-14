@@ -7,7 +7,7 @@
 1. 在 config.json 文件中填入`chat.openai.com` 里 Cookie 中的 __Secure-next-auth.session-token 与 cf_clearance
 2. 编译项目，注意在编译时将 `$(Token)` 替换为你的微信公众号 Token
 3. 部署到服务器中 默认监听本机 127.0.0.1:7458, 请自行通过 Nginx 或 Caddy 等反向代理工具进行转发
-3. 在微信公众平台中设置服务器地址为你的反向代理地址或域名地址
+3. 在微信公众平台中设置服务器地址为你的反向代理地址或域名地址，与微信公众号绑定的路由为 `/weChatGPT`
 
 ### 编译命令
 
@@ -26,7 +26,7 @@ go build -trimpath -o ./dist/weChatGPT \
 
 ### 效果图
 
-![](https://github.com/shenjia/wechat-chatGPT/blob/master/img/screenshot.jpg?raw=true)
+![](https://github.com/gtoxlili/wechat-chatGPT/blob/master/img/screenshot.jpg?raw=true)
 
 ### 关于如何在服务器上获取 `cf_clearance`
 
@@ -86,7 +86,7 @@ xvfb-run python3 get_cf.py > cf.txt
 > ~~这其实是一篇没什么用的README~~
 >
 >
-由于微信公众号的 [5s限制](https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Passive_user_reply_message.html)
+> 由于微信公众号的 [5s限制](https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Passive_user_reply_message.html)
 ，虽然本项目已经通过技术将这个限制提升至了 15s,
 > 但绝大多数情况下通过逆向得到的ChatGPT接口的相应速率都超过了这个时间限制。
 >

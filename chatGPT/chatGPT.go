@@ -96,10 +96,23 @@ func (c *ChatGPT) DeleteUser(OpenID string) {
 	userInfoMap.Delete(OpenID)
 }
 
-func (c *ChatGPT) SendMsgChan(msg, OpenID string, ctx context.Context) <-chan string {
-	ch := make(chan string, 1)
+type Result struct {
+	Val string
+	Err error
+}
+
+func (c *ChatGPT) SendMsgChan(msg, OpenID string, ctx context.Context) <-chan Result {
+	ch := make(chan Result, 1)
 	go func() {
-		ch <- c.SendMsg(msg, OpenID, ctx)
+		defer func() {
+			if err := recover(); err != nil {
+				err = err.(error)
+				if err != context.Canceled {
+					ch <- Result{Err: err.(error)}
+				}
+			}
+		}()
+		ch <- Result{Val: c.SendMsg(msg, OpenID, ctx)}
 	}()
 	return ch
 }
