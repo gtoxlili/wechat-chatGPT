@@ -39,7 +39,9 @@ func newChatGPT() *ChatGPT {
 			log.Fatalln("初始化失败: ", err)
 		}
 	}()
-	gpt := &ChatGPT{}
+	gpt := &ChatGPT{
+		config: config.ReadConfig(),
+	}
 	// 每 10 分钟更新一次 config.json
 	gpt.updateSessionToken()
 	go func() {
@@ -59,7 +61,6 @@ func (c *ChatGPT) updateSessionToken() {
 			}
 		}
 	}()
-	c.config = config.ReadConfig()
 	session, err := http.NewRequest("GET", "https://chat.openai.com/api/auth/session", nil)
 	if err != nil {
 		panic(err)
